@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Vite
+*.local
+vite-err.txt
+vite-out.txt
+
+# WASM files (copied from node_modules by postinstall script)
+public/web-ifc*.wasm
+public/web-ifc*.js
+public/web-ifc-mt.worker.js
+public/fragments-worker.mjs
+public/wasm/
+
+# Editor
+.vscode/
+*.swp
+*.swo
+
+# Env
+.env
+.env.*
