@@ -1,0 +1,23 @@
+{
+  "appId": "com.ifcstudio.app",
+  "productName": "IFCstudio",
+  "directories": {
+    "output": "dist-electron"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*"
+  ],
+  "asar": false,
+  "win": {
+    "target": {
+      "target": "portable",
+      "arch": ["x64"]
+    },
+    "sign": null,
+    "signAndEditExecutable": false
+  },
+  "portable": {
+    "artifactName": "IFCstudio-portable.exe"
+  }
+}
