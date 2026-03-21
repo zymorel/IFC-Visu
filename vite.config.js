@@ -1,8 +1,8 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  // Changer "IFC-Visu" par le nom exact de ton repo GitHub pour GitHub Pages
-  base: "/IFC-Visu/",
+  // Changer "IFCstudio" par le nom exact de ton repo GitHub pour GitHub Pages
+  base: "/IFCstudio/",
 
   build: {
     outDir: "dist",

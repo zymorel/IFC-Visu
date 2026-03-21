@@ -480,7 +480,7 @@ function buildGuideSheet() {
     ["  IsComplete = IF([Completude_%] = 100, \"Oui\", \"Non\")"],
     ["  HasMaterial = IF([A_Materiau] = \"Oui\", 1, 0)"],
     [],
-    ["Genere par IFC Visu v2 — " + new Date().toLocaleDateString("fr-FR")],
+    ["Généré par IFCstudio — " + new Date().toLocaleDateString("fr-FR")],
   ];
   const ws = XLSX.utils.aoa_to_sheet(lines);
   ws["!cols"] = [{ wch: 90 }];

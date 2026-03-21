@@ -20,6 +20,9 @@ public/web-ifc-mt.worker.js
 public/fragments-worker.mjs
 public/wasm/
 
+# Large IFC test files (too heavy for git — use examples/*.ids only)
+examples/*.ifc
+
 # Editor
 .vscode/
 *.swp

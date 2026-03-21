@@ -1,99 +1,161 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IFC Visu v2</title>
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <link rel="stylesheet" href="./src/style.css" />
-  </head>
-  <body>
-    <!-- Barre d'outils -->
-    <header id="toolbar">
-      <div id="toolbar-left">
-        <span id="app-title">IFC Visu v2</span>
-        <span class="toolbar-sep"></span>
-        <label id="btn-load" class="toolbar-btn tb-file" title="Charger un fichier IFC">
-          <span class="tb-icon">&#128194;</span> Charger IFC
-          <input type="file" id="ifc-input" accept=".ifc" hidden />
-        </label>
-        <button id="btn-fit" class="toolbar-btn" title="Ajuster la vue (F)">
-          <span class="tb-icon">&#8982;</span> Ajuster
-        </button>
-      </div>
-      <div id="toolbar-center">
-        <div class="tb-group">
-          <span class="tb-group-label">Outils</span>
-          <button id="btn-select" class="toolbar-btn" title="Selection (S)">Selection</button>
-          <button id="btn-measure" class="toolbar-btn" title="Mesurer (M)">Mesurer</button>
-          <button id="btn-clip" class="toolbar-btn" title="Plan de coupe (C)">Coupe</button>
-        </div>
-        <span class="toolbar-sep"></span>
-        <div class="tb-group">
-          <span class="tb-group-label">Affichage</span>
-          <button id="btn-wireframe" class="toolbar-btn" title="Mode filaire (W)">Filaire</button>
-          <button id="btn-xray" class="toolbar-btn" title="Mode X-Ray (X)">X-Ray</button>
-          <button id="btn-isolate" class="toolbar-btn" title="Isoler (I)">Isoler</button>
-          <button id="btn-hide" class="toolbar-btn" title="Masquer (H)">Masquer</button>
-          <button id="btn-show-all" class="toolbar-btn" title="Tout afficher (A)">Afficher tout</button>
-        </div>
-        <span class="toolbar-sep"></span>
-        <div class="tb-group">
-          <span class="tb-group-label">IDS</span>
-          <label id="btn-load-ids" class="toolbar-btn ids-btn" title="Charger un fichier IDS pour validation">
-            Valider IDS
-            <input type="file" id="ids-input" accept=".ids,.xml" hidden />
-          </label>
-          <button id="btn-clear-ids" class="toolbar-btn hidden" title="Effacer la validation">Effacer</button>
-          <button id="btn-ids-dashboard" class="toolbar-btn ids-btn hidden" title="Dashboard IDS">Dashboard</button>
-        </div>
-      </div>
-      <div id="toolbar-right">
-        <button id="btn-export-csv" class="toolbar-btn export-btn" title="Exporter XLSX Power BI (5 onglets)">XLSX</button>
-        <button id="btn-export-json" class="toolbar-btn export-btn" title="Exporter JSON">JSON</button>
-      </div>
-    </header>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>IFCstudio</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="./src/style.css"/>
+</head>
+<body>
 
-    <!-- Sous-barre coupe -->
+<!-- ══ Tab Navigation ═══════════════════════════════════════════════ -->
+<div class="tabnav">
+  <div class="tabnav-brand">
+    <span class="tabnav-logo">IFC <span>studio</span></span>
+  </div>
+  <div class="tabnav-tabs">
+    <button class="tbtn active" data-tab="upload">① Upload &amp; Validation</button>
+    <button class="tbtn" data-tab="viewer" id="tab-viewer-btn" disabled>② 3D Viewer</button>
+    <button class="tbtn" data-tab="dashboard" id="tab-dashboard-btn" disabled>③ Dashboard</button>
+  </div>
+  <div class="tabnav-status">
+    <span id="status-text" class="status-text"></span>
+  </div>
+</div>
+
+<!-- ══ Panels ════════════════════════════════════════════════════════ -->
+<div class="panels">
+
+  <!-- ① Upload & Validation -->
+  <div class="panel active" id="tab-upload">
+    <div class="upload-wrap">
+      <div class="sec-title">Fichiers source</div>
+
+      <div class="drop-grid">
+        <!-- IFC -->
+        <div class="dzone" id="z-ifc">
+          <input type="file" id="i-ifc" accept=".ifc" hidden/>
+          <label for="i-ifc" class="dzone-inner">
+            <span class="dzone-icon">🏗️</span>
+            <div class="dzone-lbl">Fichier IFC</div>
+            <div class="dzone-hint">Glisser ou cliquer — .ifc</div>
+            <div class="dzone-name" id="n-ifc"></div>
+          </label>
+        </div>
+        <!-- IDS -->
+        <div class="dzone" id="z-ids">
+          <input type="file" id="i-ids" accept=".ids,.xml" hidden/>
+          <label for="i-ids" class="dzone-inner">
+            <span class="dzone-icon">📋</span>
+            <div class="dzone-lbl">Fichier IDS</div>
+            <div class="dzone-hint">Glisser ou cliquer — .ids / .xml</div>
+            <div class="dzone-name" id="n-ids"></div>
+          </label>
+        </div>
+      </div>
+
+      <button class="btn-run" id="btn-run" disabled>Sélectionner au moins un fichier</button>
+      <div class="err-box" id="err-box"></div>
+
+      <!-- IDS Explorer (IDS-only) -->
+      <div id="ids-explorer-wrap" style="display:none">
+        <div class="sec-title" style="margin-top:24px;display:flex;align-items:center;justify-content:space-between">
+          Explorateur IDS
+          <button class="xbtn" id="btn-ids-export-standalone">⬇ Exporter IDS</button>
+        </div>
+        <div id="ids-editor-container"></div>
+      </div>
+
+      <!-- Validation results (IFC+IDS) -->
+      <div id="validation-results" style="display:none">
+        <div class="bilan-row" id="bilan-row"></div>
+        <div class="sec-title" style="margin-top:20px">Résultats par exigence</div>
+        <div id="specs-list"></div>
+        <div class="xbar">
+          <button class="xbtn" id="btn-go-viewer">→ 3D Viewer</button>
+          <button class="xbtn" id="btn-go-dash">→ Dashboard</button>
+          <button class="xbtn" id="btn-dl-json">⬇ JSON</button>
+          <button class="xbtn" id="btn-dl-csv">⬇ CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 3D Viewer -->
+  <div class="panel" id="tab-viewer">
+
+    <!-- Sub-toolbar -->
+    <div id="viewer-toolbar">
+      <div class="vtb-group">
+        <button id="btn-fit"       class="vtbtn" title="Ajuster la vue [F]">⌂ Ajuster</button>
+      </div>
+      <div class="vtb-sep-v"></div>
+      <div class="vtb-group">
+        <button id="btn-select"    class="vtbtn active" title="Sélection [S]">↖ Sélecter</button>
+        <button id="btn-measure"   class="vtbtn" title="Mesurer [M]">⊢ Mesurer</button>
+        <button id="btn-clip"      class="vtbtn" title="Plan de coupe [C]">⊟ Coupe</button>
+      </div>
+      <div class="vtb-sep-v"></div>
+      <div class="vtb-group">
+        <button id="btn-wireframe" class="vtbtn" title="Mode filaire [W]">⬡ Filaire</button>
+        <button id="btn-xray"      class="vtbtn" title="X-Ray [X]">◈ X-Ray</button>
+        <button id="btn-isolate"   class="vtbtn" title="Isoler [I]">⊕ Isoler</button>
+        <button id="btn-hide"      class="vtbtn" title="Masquer [H]">⊖ Masquer</button>
+        <button id="btn-show-all"  class="vtbtn" title="Tout afficher [A]">⊙ Tout</button>
+      </div>
+      <div class="vtb-sep-v"></div>
+      <div class="vtb-group">
+        <input type="file" id="i-ids-viewer" accept=".ids,.xml" hidden/>
+        <label for="i-ids-viewer" class="vtbtn vtbtn-ids" id="btn-ids-load" title="Charger un fichier IDS pour valider">📋 IDS</label>
+        <button id="btn-ids-run"   class="vtbtn vtbtn-ids-run hidden" title="Lancer la validation IDS">▶ Valider</button>
+        <button id="btn-clear-ids" class="vtbtn hidden" title="Effacer la validation IDS">✕ Effacer IDS</button>
+      </div>
+      <div class="vtb-right">
+        <button id="btn-export-csv"  class="vtbtn vtbtn-export" title="Export XLSX">XLSX</button>
+        <button id="btn-export-json" class="vtbtn vtbtn-export" title="Export JSON">JSON</button>
+        <span id="status-count" class="vtb-count"></span>
+      </div>
+    </div>
+
+    <!-- Clip sub-bar -->
     <div id="clip-controls" class="hidden">
       <label>Axe :</label>
       <button class="clip-axis-btn active" data-axis="y">Y</button>
       <button class="clip-axis-btn" data-axis="x">X</button>
       <button class="clip-axis-btn" data-axis="z">Z</button>
-      <span class="toolbar-sep"></span>
-      <input type="range" id="clip-slider" min="0" max="1" step="0.005" value="0.5" />
-      <button id="btn-clip-flip" class="toolbar-btn" title="Inverser la direction">Inverser</button>
+      <div class="vtb-sep-v" style="height:20px;margin:0 8px"></div>
+      <input type="range" id="clip-slider" min="0" max="1" step="0.005" value="0.5"/>
+      <button id="btn-clip-flip" class="vtbtn" style="margin-left:8px">⇅ Inverser</button>
     </div>
 
-    <!-- Zone principale -->
+    <!-- Main viewer area -->
     <main id="app">
-      <!-- Arborescence IFC -->
+      <!-- Tree panel -->
       <aside id="tree-panel">
-        <div id="tree-header">
-          <h2 id="tree-title">Structure IFC</h2>
-        </div>
+        <div id="tree-header"><h2 id="tree-title">Structure IFC</h2></div>
         <div id="tree-content"></div>
       </aside>
-      <div class="resize-handle" id="resize-tree" title="Glisser pour redimensionner"></div>
+      <div class="resize-handle" id="resize-tree"></div>
 
-      <!-- Viewer 3D -->
+      <!-- 3D Canvas -->
       <div id="viewer-container">
         <canvas id="three-canvas"></canvas>
         <div id="loading-overlay" class="hidden">
           <div id="loading-spinner"></div>
-          <p id="loading-text">Chargement du fichier IFC…</p>
+          <p id="loading-text">Chargement…</p>
         </div>
         <div id="drop-zone">
           <div id="drop-message">
             <span class="drop-icon">IFC</span>
             <p>Glisse un fichier <strong>.ifc</strong> ici</p>
-            <p>ou clique sur <strong>Charger IFC</strong></p>
           </div>
         </div>
       </div>
 
-      <!-- Panneau résultats IDS -->
-      <div class="resize-handle" id="resize-ids" title="Glisser pour redimensionner"></div>
+      <!-- IDS results panel -->
+      <div class="resize-handle" id="resize-ids"></div>
       <aside id="ids-panel" class="hidden">
         <div id="ids-header">
           <h2 id="ids-title">Résultats IDS</h2>
@@ -102,8 +164,8 @@
         <div id="ids-content"></div>
       </aside>
 
-      <!-- Panneau propriétés -->
-      <div class="resize-handle" id="resize-props" title="Glisser pour redimensionner"></div>
+      <!-- Properties panel -->
+      <div class="resize-handle" id="resize-props"></div>
       <aside id="properties-panel" class="hidden">
         <div id="panel-header">
           <h2 id="panel-title">Propriétés</h2>
@@ -114,28 +176,30 @@
         </div>
       </aside>
     </main>
+  </div>
 
-    <!-- Barre de statut -->
-    <footer id="statusbar">
-      <span id="status-text">Prêt — Chargez un fichier IFC pour commencer</span>
-      <span id="status-count"></span>
-    </footer>
+  <!-- ③ Dashboard -->
+  <div class="panel" id="tab-dashboard">
+    <!-- Placeholder when no validation -->
+    <div class="dash-placeholder" id="dash-no-data">
+      <div class="dash-placeholder-icon">📊</div>
+      <div class="dash-placeholder-msg">Chargez un fichier IFC et un fichier IDS<br/>puis lancez la validation pour accéder au Dashboard</div>
+    </div>
 
-    <!-- Dashboard IDS Overlay -->
+    <!-- Dashboard content -->
     <div id="ids-dashboard-overlay" class="hidden">
       <div class="dash-app">
         <div class="dash-topbar">
           <span class="dash-logo">IDS <span>Dashboard</span></span>
-          <span class="dash-sub">Rapport de conformite</span>
-          <button id="dash-close" class="dash-close-btn" title="Fermer">&times;</button>
+          <span class="dash-sub">Rapport de conformité</span>
+          <button id="dash-close" class="dash-close-btn" title="Retour au viewer">✕</button>
         </div>
 
         <div class="dash-content">
-          <!-- Top row: Gauge + Charts -->
+          <!-- Header row: gauge + summary + charts -->
           <div class="dash-header-row">
-            <!-- Gauge -->
             <div class="dash-card dash-gauge-card">
-              <div class="dash-card-title">Conformite globale</div>
+              <div class="dash-card-title">Conformité globale</div>
               <div class="dash-gauge-wrap">
                 <svg viewBox="0 0 110 110" width="130" height="70">
                   <path d="M12,98 A55,55 0 0,1 98,98" fill="none" stroke="#2e3340" stroke-width="10" stroke-linecap="round"/>
@@ -146,47 +210,38 @@
               <div class="dash-gauge-detail" id="dash-gauge-detail">-- / -- conformes</div>
             </div>
 
-            <!-- Summary cards -->
             <div class="dash-card dash-summary-card">
               <div class="dash-card-title">Bilan</div>
               <div class="dash-summary-grid">
-                <div class="dash-stat">
-                  <span class="dash-stat-num dash-c-accent" id="dash-total">--</span>
-                  <span class="dash-stat-label">Elements testes</span>
-                </div>
-                <div class="dash-stat">
-                  <span class="dash-stat-num dash-c-green" id="dash-pass">--</span>
-                  <span class="dash-stat-label">Conformes</span>
-                </div>
-                <div class="dash-stat">
-                  <span class="dash-stat-num dash-c-red" id="dash-fail">--</span>
-                  <span class="dash-stat-label">Non conformes</span>
-                </div>
-                <div class="dash-stat">
-                  <span class="dash-stat-num dash-c-warn" id="dash-specs">--</span>
-                  <span class="dash-stat-label">Exigences IDS</span>
-                </div>
+                <div class="dash-stat"><span class="dash-stat-num dash-c-accent" id="dash-total">--</span><span class="dash-stat-label">Éléments testés</span></div>
+                <div class="dash-stat"><span class="dash-stat-num dash-c-green"  id="dash-pass">--</span><span class="dash-stat-label">Conformes</span></div>
+                <div class="dash-stat"><span class="dash-stat-num dash-c-red"    id="dash-fail">--</span><span class="dash-stat-label">Non conformes</span></div>
+                <div class="dash-stat"><span class="dash-stat-num dash-c-warn"   id="dash-specs">--</span><span class="dash-stat-label">Exigences IDS</span></div>
               </div>
             </div>
 
-            <!-- Pie chart -->
             <div class="dash-card dash-chart-card">
               <div class="dash-card-title">Conformes vs Non conformes</div>
               <canvas id="dash-chart-pie" class="dash-canvas"></canvas>
             </div>
 
-            <!-- Bar chart -->
             <div class="dash-card dash-chart-card">
-              <div class="dash-card-title">Resultats par type IFC</div>
+              <div class="dash-card-title">Résultats par spécification</div>
               <canvas id="dash-chart-bar" class="dash-canvas"></canvas>
             </div>
+          </div>
+
+          <!-- Spec summary -->
+          <div class="dash-spec-summary-section">
+            <div class="dash-section-title">Résultats par exigence</div>
+            <div id="dash-spec-summary"></div>
           </div>
 
           <!-- Table -->
           <div class="dash-table-card">
             <div class="dash-tbl-header">
               <div class="dash-tbl-title-row">
-                <span class="dash-tbl-title">Tableau recapitulatif</span>
+                <span class="dash-tbl-title">Tableau récapitulatif</span>
                 <span class="dash-tbl-count" id="dash-tbl-count"></span>
               </div>
               <div class="dash-tbl-controls">
@@ -195,7 +250,7 @@
                   <span class="dash-pill dash-pill-ok" data-f="pass">Conformes</span>
                   <span class="dash-pill dash-pill-ko" data-f="fail">Non conformes</span>
                 </div>
-                <input class="dash-search" id="dash-search" placeholder="Rechercher..." />
+                <input class="dash-search" id="dash-search" placeholder="Rechercher…"/>
                 <select class="dash-select" id="dash-filter-type"><option value="">Tous les types</option></select>
                 <select class="dash-select" id="dash-filter-spec"><option value="">Toutes les exigences</option></select>
                 <button class="dash-export-btn" id="dash-export-csv">Export CSV</button>
@@ -204,15 +259,17 @@
             <div class="dash-tbl-scroll">
               <table class="dash-table">
                 <thead id="dash-thead"><tr>
-                  <th data-col="id">ID <span class="dash-si">&#8597;</span></th>
-                  <th data-col="type">Type IFC <span class="dash-si">&#8597;</span></th>
-                  <th data-col="name">Nom <span class="dash-si">&#8597;</span></th>
-                  <th data-col="guid">GUID <span class="dash-si">&#8597;</span></th>
-                  <th data-col="spec">Exigence <span class="dash-si">&#8597;</span></th>
-                  <th data-col="status">Statut <span class="dash-si">&#8597;</span></th>
+                  <th data-col="id">ID <span class="dash-si">↕</span></th>
+                  <th data-col="type">Type IFC <span class="dash-si">↕</span></th>
+                  <th data-col="name">Nom <span class="dash-si">↕</span></th>
+                  <th data-col="storey">Étage <span class="dash-si">↕</span></th>
+                  <th data-col="guid">GUID <span class="dash-si">↕</span></th>
+                  <th data-col="spec">Exigence <span class="dash-si">↕</span></th>
+                  <th data-col="reason">Raison <span class="dash-si">↕</span></th>
+                  <th data-col="status">Statut <span class="dash-si">↕</span></th>
                 </tr></thead>
                 <tbody id="dash-tbody">
-                  <tr><td colspan="6" class="dash-empty">Lancez une validation IDS pour voir les resultats</td></tr>
+                  <tr><td colspan="8" class="dash-empty">Lancez une validation IDS pour voir les résultats</td></tr>
                 </tbody>
               </table>
             </div>
@@ -227,7 +284,10 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <script type="module" src="./src/main.js"></script>
-  </body>
+</div><!-- /panels -->
+
+<script type="module" src="./src/main.js"></script>
+</body>
 </html>

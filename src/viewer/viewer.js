@@ -60,13 +60,16 @@ export async function initViewer(canvas) {
   }
   animate();
 
-  const resizeObserver = new ResizeObserver(() => {
+  const doResize = () => {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
-    renderer.setSize(w, h);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-  });
+    if (w > 0 && h > 0) {
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+  };
+  const resizeObserver = new ResizeObserver(doResize);
   resizeObserver.observe(canvas.parentElement);
 
   return { scene, camera, controls, ifcApi, renderer };
@@ -205,3 +208,17 @@ export function getScene() { return scene; }
 export function getCamera() { return camera; }
 export function getRenderer() { return renderer; }
 export function getControls() { return controls; }
+
+/** Force un recalcul de la taille du renderer — appeler quand l'onglet viewer redevient visible */
+export function forceResize() {
+  if (!renderer || !canvas) return;
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  if (w > 0 && h > 0) {
+    renderer.setSize(w, h);
+    if (camera) {
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+  }
+}

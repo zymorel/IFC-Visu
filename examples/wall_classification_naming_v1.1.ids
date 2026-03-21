@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ids:ids xmlns:xs="http://www.w3.org/2001/XMLSchema"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/1.0/ids.xsd"
+         xmlns:ids="http://standards.buildingsmart.org/IDS">
+
+  <ids:info>
+    <ids:title>Contrôle Classification Uniformat et Nommage — Murs</ids:title>
+    <ids:version>1.1</ids:version>
+    <ids:description>
+      Chaque mur (IfcWallStandardCase, IFC2X3) doit satisfaire deux exigences :
+      1. Être associé à une classification Uniformat (système CSI).
+      2. Respecter la convention de nommage : Mur de base:ARC-WALL-[NIVEAU]-[POSITION]-[ÉPAISSEUR]:[TAG]
+         (exemples : ARC-WALL-RDC-EXT-20, ARC-WALL-R+1-INT-10).
+      IMPORTANT : Le fichier IFC cible est exporté en IFC2X3 depuis Revit.
+      En IFC2X3, les murs standards sont exportés comme IfcWallStandardCase (sous-type de IfcWall).
+      Ce fichier IDS cible explicitement IfcWallStandardCase pour garantir la détection correcte.
+    </ids:description>
+    <ids:author>zeulieum@gmail.com</ids:author>
+    <ids:date>2026-03-21</ids:date>
+    <ids:purpose>Contrôle qualité BIM — Conformité IDS des murs (IFC2X3 / Revit)</ids:purpose>
+  </ids:info>
+
+  <ids:specifications>
+
+    <!-- ================================================================
+         SPÉCIFICATION 1 : Classification Uniformat obligatoire
+         
+         Contexte IFC2X3 :
+         - En IFC2X3, Revit exporte les murs comme IfcWallStandardCase
+           (et non IfcWall simple). L'entité cible est donc IFCWALLSTANDARDCASE.
+         - La classification est portée par IfcRelAssociatesClassification,
+           avec le système source nommé "Uniformat" (CSI, 1998).
+         - Codes attendus selon le modèle :
+             B2010 → Exterior Walls (murs extérieurs)
+             C1010 → Partitions (cloisons / murs intérieurs)
+         
+         Résultat attendu sur PAR-BATA-ARC-IND0-260305.ifc :
+           - 4 conformes  : ARC-WALL-RDC-EXT-20 (B2010 assigné)
+           - 16 non-conformes : tous les autres murs (pas de classification)
+    ================================================================ -->
+    <ids:specification ifcVersion="IFC2X3"
+                       name="Classification Uniformat — Murs"
+                       identifier="SP-01"
+                       description="Chaque IfcWallStandardCase doit être associé à une classification dont le système source est 'Uniformat' (CSI). Codes attendus : B2010 (murs extérieurs), C1010 (cloisons)."
+                       instructions="Dans Revit, appliquer un Assembly Code Uniformat à chaque type de mur via Propriétés du type > Données d'identité > Code d'assemblage. Re-exporter en IFC2X3 après correction.">
+
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <!-- IfcWallStandardCase : sous-type de IfcWall utilisé par Revit en IFC2X3
+                 pour les murs à géométrie paramétrique standard. -->
+            <ids:simpleValue>IFCWALLSTANDARDCASE</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+
+      <ids:requirements>
+        <ids:classification cardinality="required"
+                            instructions="Le mur doit posséder une classification dont le système source est nommé exactement 'Uniformat'. Vérifier que le champ ReferencedSource.Name de l'IfcClassification vaut 'Uniformat'.">
+          <ids:system>
+            <ids:simpleValue>Uniformat</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+      </ids:requirements>
+
+    </ids:specification>
+
+    <!-- ================================================================
+         SPÉCIFICATION 2 : Convention de nommage des murs
+         
+         Convention déduite du fichier IFC PAR-BATA-ARC-IND0-260305 :
+           Format : "Mur de base:[TYPE_FAMILLE]:[TAG_REVIT]"
+           TYPE_FAMILLE = ARC-WALL-[NIVEAU]-[POSITION]-[ÉPAISSEUR]
+         
+         Décomposition :
+           ARC    → Discipline : Architecture
+           WALL   → Catégorie IFC : Mur
+           NIVEAU → Étage du bâtiment (RDC, R+1, R+2, SS1, TOI…)
+           POS    → Position : EXT (extérieur) | INT (intérieur)
+           ÉP     → Épaisseur en cm : valeur entière (10, 20, 30…)
+           TAG    → Identifiant Revit numérique (attribué automatiquement)
+         
+         Exemples valides observés dans le fichier IFC :
+           "Mur de base:ARC-WALL-RDC-EXT-20:256350"
+           "Mur de base:ARC-WALL-RDC-INT-10:257776"
+           "Mur de base:ARC-WALL-R+1-EXT-20:258531"
+           "Mur de base:ARC-WALL-R+1-INT-10:258535"
+         
+         Regex appliqué :
+           Mur de base:ARC-WALL-[A-Za-z0-9+\-]+:[0-9]+
+         
+         Résultat attendu : 20/20 conformes (tous les murs respectent la convention)
+    ================================================================ -->
+    <ids:specification ifcVersion="IFC2X3"
+                       name="Convention de nommage — Murs ARC-WALL"
+                       identifier="SP-02"
+                       description="Le nom (attribut Name) de chaque mur doit respecter la convention BIM du projet : 'Mur de base:ARC-WALL-[NIVEAU]-[POSITION]-[ÉPAISSEUR]:[TAG]'. Exemples valides : 'Mur de base:ARC-WALL-RDC-EXT-20:256350', 'Mur de base:ARC-WALL-R+1-INT-10:258535'."
+                       instructions="Dans Revit, renommer les types de mur en respectant le format ARC-WALL-[NIVEAU]-[POSITION]-[ÉPAISSEUR]. Discipline=ARC, Niveau=RDC/R+1/SS1/TOI, Position=EXT/INT, Épaisseur=valeur entière en cm. Le TAG numérique est attribué automatiquement par Revit et n'est pas à saisir manuellement.">
+
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCWALLSTANDARDCASE</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+
+      <ids:requirements>
+        <ids:attribute cardinality="required"
+                       instructions="L'attribut Name doit respecter le pattern : 'Mur de base:ARC-WALL-[NIVEAU]-[POSITION]-[ÉPAISSEUR]:[TAG]'.">
+          <ids:name>
+            <ids:simpleValue>Name</ids:simpleValue>
+          </ids:name>
+          <ids:value>
+            <xs:restriction base="xs:string">
+              <!-- Pattern regex :
+                   - "Mur de base:" → préfixe famille Revit fixe
+                   - "ARC-WALL-"   → discipline + catégorie obligatoires
+                   - "[A-Za-z0-9+\-]+" → niveau-position-épaisseur (ex: RDC-EXT-20, R+1-INT-10)
+                   - ":[0-9]+"     → séparateur + TAG numérique Revit
+              -->
+              <xs:pattern value="Mur de base:ARC-WALL-[A-Za-z0-9+\-]+:[0-9]+"/>
+            </xs:restriction>
+          </ids:value>
+        </ids:attribute>
+      </ids:requirements>
+
+    </ids:specification>
+
+  </ids:specifications>
+
+</ids:ids>

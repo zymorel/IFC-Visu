@@ -1,7 +1,7 @@
 {
-  "name": "ifc-visu",
-  "version": "2.0.0",
-  "description": "Visualiseur IFC 3D — web-ifc + Three.js, validation IDS, export Power BI",
+  "name": "ifcstudio",
+  "version": "1.0.0",
+  "description": "IFCstudio — Visualisation IFC 3D, validation IDS, Dashboard conformité",
   "type": "module",
   "scripts": {
     "dev": "vite",
