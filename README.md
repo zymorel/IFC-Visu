@@ -30,7 +30,7 @@ Fonctionne en local et sur GitHub Pages — aucun serveur requis.
 ### Installation
 
 ```bash
-git clone https://github.com/VOTRE_USERNAME/IFCstudio.git
+git clone https://github.com/zymorel/IFCstudio.git
 cd IFCstudio
 npm install
 ```
@@ -132,7 +132,7 @@ npm run build
 Puis dans les settings du repo GitHub :
 **Settings > Pages > Source > Deploy from branch > main > /dist**
 
-L'app sera accessible a `https://VOTRE_USERNAME.github.io/IFCstudio/`
+L'app sera accessible a `https://zymorel.github.io/IFCstudio/`
 
 ## Technologies
 
